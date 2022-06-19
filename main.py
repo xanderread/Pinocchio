@@ -1,8 +1,9 @@
 import numpy as np
+import re
 
 #TODO: implement all the other methods for determining the liar value
 #FIXME: clean up / comment code
-# TODO: implement ai to determine the liar value calculations
+#TODO: implement ai to determine the liar value calculations -> Use outcome of methods to determine whether the person is a liar
 #TODO: tie program to ai
 
 def logTexts():
@@ -34,6 +35,9 @@ def main(methods):
 #     initialTexts = np.array([["Hello", 10],["I'm doing good thank you",20],["This. is just a normal conversation yea",50]])
 #     lieTexts = np.array([["I disagree with that",40],["No your lying to me. I didnt say that. Why dont you believe me",50],["I dont want to respond anymore. Loser head.",80]])
 #     print("\n\n\n\n -----------------------------")
+    endEarly = input("Did the person abruptly leave, or attempt to abruptly leave, the conversation? Y/N")
+    if(endEarly == "Y"):
+        liarValue = liarValue * 1.1
     print("Evaluating.....")
     for f in methods:
         liarValue = f(initialTexts,lieTexts,liarValue)
@@ -41,7 +45,6 @@ def main(methods):
     print("The final liar value is: ",liarValue)
     
 def responseTime(initialTexts,lieTexts,liarValue):
-    #Must know how long they usually take to respond to use this
     justTimesInitial = np.array(initialTexts[:,1], dtype=np.uint32)
     justTimesPost = np.array(lieTexts[:,1], dtype=np.uint32)
     initialTextResponseTime = np.average(justTimesInitial)
@@ -58,18 +61,51 @@ def complicated(initialTexts,lieTexts,liarValue):
     sentences = []
     for sentence in initialTexts[:,0]:
         sentences.append(len(sentence.split('. ')))
-    initialSentences = len(sentences)
+    initialSentences = np.mean(np.array(sentences))
     sentences = []
     for sentence in lieTexts[:,0]:
         sentences.append(len(sentence.split('. ')))
-    postSentences = len(sentences)
+    postSentences = np.mean(np.array(sentences))
     if(postLength>initialLength or initialSentences > postSentences):
-        return liarValue * 1.1 #TODO: how do we know to use these excat values? can use AI to get on this 
+        return liarValue * 1.1 #TODO: how do we know to use these excat values? can use AI to get on this
     else:
         return liarValue * 0.9 #TODO: how do we know to use these exact values? can use AI to get on this ECT
 
+def personalPronouns(initialTexts,lieTexts,liarValue):
+    #Must assess whether the liar has removed personal pronouns
+    pronounRegex = re.compile(r'\b(I|we|my|ours|(?-i:us))\b',re.I)
+    pronouns = []
+    for sentence in initialTexts[:,0]:
+        pronouns.append(len(pronounRegex.findall(sentence)))
+    initialPronouns = np.mean(np.array(pronouns)) #TODO: Should use np implementation throughout
+    pronouns = []
+    for sentence in lieTexts[:,0]:
+        pronouns.append(len(pronounRegex.findall(sentence)))
+    liePronouns = np.mean(np.array(pronouns))
+    if(initialPronouns > 1.2*liePronouns): #TODO: Must find how much it should change by to be flagged
+        return liarValue * 1.1 #Could instead return how much its increased / decreased by and use that to determine whether they are a liar
+    else:
+        return liarValue * 0.9
 
+def tenseHopping(initialTexts,lieTexts,liarValue):
+    #Must assess whether the liar has started tense hopping
+    return liarValue
 
+def thirdPersonPronouns(initialTexts,lieTexts,liarValue):
+    #Must assess whether the liar has used more third person pronouns
+    return liarValue
+
+def exclusiveWords(initialTexts,lieTexts,liarValue):
+    #Must assess whether the liar has used fewer exclusive words
+    return liarValue
+
+def negativeEmotion(initialTexts,lieTexts,liarValue):
+    #Must assess whether the liar has used more negative emotion words
+    return liarValue
+
+def motionVerbs(initialTexts,lieTexts,liarValue):
+    #Must assess whether the liar has used more motionVerbs
+    return liarValue
 
 methods = [complicated,responseTime] #Order is in reverse order of importance
     
